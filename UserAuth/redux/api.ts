@@ -1,7 +1,19 @@
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
-import { refreshAccessToken } from "./services/authService";
 const API_URL = "https://dummyjson.com/";
+
+export const refreshAccessToken = async () => {
+  const refreshToken = await SecureStore.getItemAsync("refreshToken");
+  if (!refreshToken) throw new Error("No refresh token");
+
+  const response = await axios.post("https://dummyjson.com/auth/refresh", {
+    refreshToken,
+    expiresInMins: 30,
+  });
+
+  await SecureStore.setItemAsync("accessToken", response.data.accessToken);
+  return response.data.accessToken;
+};
 
 const apiClient = axios.create({
   baseURL: API_URL,

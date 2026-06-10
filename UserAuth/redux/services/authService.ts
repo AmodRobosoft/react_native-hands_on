@@ -17,15 +17,3 @@ export const getMe = async (accessToken: string | null) => {
   return response.data;
 };
 
-export const refreshAccessToken = async () => {
-  const refreshToken = await SecureStore.getItemAsync("refreshToken");
-  if (!refreshToken) throw new Error("No refresh token");
-
-  const response = await apiClient.post("/auth/refresh", {
-    refreshToken,
-    expiresInMins: 30,
-  });
-
-  await SecureStore.setItemAsync("accessToken", response.data.accessToken);
-  return response.data.accessToken;
-};
