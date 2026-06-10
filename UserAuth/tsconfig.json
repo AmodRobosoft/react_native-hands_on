@@ -1,7 +1,17 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
+ "moduleResolution": "bundler",
+    "customConditions": ["react-native"],
+    "jsx": "react-jsx",
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
     "paths": {
       "@/*": [
         "./*"
@@ -12,6 +22,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    "expo-env.d.ts",
+    "nativewind-env.d.ts"
   ]
 }

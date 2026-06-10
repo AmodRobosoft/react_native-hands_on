@@ -1,35 +1,50 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+import { Tabs, usePathname } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { View } from 'react-native';
+import Header from '@/components/Header';
 
+import CustomTabBar from '@/components/CustomTabBar';
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+
+  const pathname = usePathname()
+  const [title , setTitle] = useState("Home")
+ 
+  useEffect(() => {
+    const seg = pathname.split("/").filter(Boolean);
+    const key = (seg[seg.length - 1] || "index").toLowerCase();
+    switch (key) {
+      case "cart":
+        setTitle("Cart");
+        break;
+      case "profile": 
+        setTitle("Profile");
+        break;
+      default:
+        setTitle("Home");
+    }
+    
+  }, [pathname]);
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+    <View className="flex-1 " >
+      <Header title={title} showBack={false} />
+      <Tabs
+        
+        screenOptions={{
+          headerShown: false,
+          tabBarButton: HapticTab,
+          
         }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      />
-    </Tabs>
+
+        tabBar={(props) => <CustomTabBar {...props} />}
+      >
+        <Tabs.Screen name="index" options={{ title: "Home" }} />
+        <Tabs.Screen name="Cart" options={{ title: "Cart" }} />
+        <Tabs.Screen name="Profile" options={{ title: "Profile" }} />
+      </Tabs>
+    </View>
   );
 }

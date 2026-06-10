@@ -1,40 +1,34 @@
-import { useEffect } from "react";
-import * as SecureStore from "expo-secure-store";
+import { useEffect, useState } from "react";
 import { Stack } from "expo-router";
-import { useDispatch, useSelector, Provider } from "react-redux";
-import { RootState, store } from "@/redux/store";
-import { restoreToken, setLoading } from "@/redux/slices/authSlice";
+import { Provider } from "react-redux";
+import {  store } from "@/redux/store";
+import Toast from "react-native-toast-message";
+import "../global.css"
+import * as SecureStore from "expo-secure-store";
 
 const RootLayoutContent = () => {
-  const dispatch = useDispatch();
-  const { user, isLoading } = useSelector((state: RootState) => state.auth);
+  const [isBootstrapping, setIsBootstrapping] = useState(true);
+  const [token, setToken] = useState<string | null>(null);
+
+  
+
 
   useEffect(() => {
-    bootstrapAsync();
-  }, []);
+    const bootstrap = async () => {
+      const saved = await SecureStore.getItemAsync("accessToken");
+      
+      setToken(saved);
+      setIsBootstrapping(false);
+      
+    };
+    bootstrap();
+  }, []); // only runs on cold start
 
-  const bootstrapAsync = async () => {
-    try {
-      const token = await SecureStore.getItemAsync("userToken");
-      const email = await SecureStore.getItemAsync("userEmail");
-      if (token && email) {
-        dispatch(restoreToken({ token, email }));
-      } else {
-        dispatch(setLoading(false));
-      }
-    } catch (e) {
-      console.error("Error restoring token:", e);
-      dispatch(setLoading(false));
-    }
-  };
-
-  if (isLoading) {
-    return <Stack screenOptions={{ headerShown: false }} />;
-  }
+  if (isBootstrapping) return null;
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      {user == null ? (
+      {token == null ? (
         <Stack.Screen name="(Auth)" options={{ animation: "none" }} />
       ) : (
         <Stack.Screen name="(tabs)" options={{ animation: "none" }} />
@@ -47,6 +41,7 @@ export default function RootLayout() {
   return (
     <Provider store={store}>
       <RootLayoutContent />
+      <Toast position="top" bottomOffset={20} />
     </Provider>
   );
 }
