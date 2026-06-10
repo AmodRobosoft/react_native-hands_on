@@ -1,8 +1,5 @@
 import { Tabs, usePathname } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
 import { View } from 'react-native';
 import Header from '@/components/Header';
 
@@ -35,7 +32,6 @@ export default function TabLayout() {
         
         screenOptions={{
           headerShown: false,
-          tabBarButton: HapticTab,
           
         }}
 
