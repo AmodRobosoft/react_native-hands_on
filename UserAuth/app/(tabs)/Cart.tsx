@@ -6,7 +6,8 @@ import CartCardSkeleton from '@/components/CartCardSkeleton'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '@/redux/store'
 import { userCart } from '@/redux/slices/cartSlice'
-import CartSummary from '@/components/ui/CartSummary'
+import CartSummary from '@/components/CartSummary'
+
 
 const Cart = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -14,6 +15,7 @@ const Cart = () => {
 
   useEffect(() => { 
     const id = SecureStore.getItem("userId")
+    console.log("id",id)
     dispatch(userCart(id))
   }, [])
   
