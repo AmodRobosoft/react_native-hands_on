@@ -1,6 +1,6 @@
 import React from 'react'
 import { View, Text } from 'react-native';
-const CartSummary = ({ cart}) => {
+const CartSummary = ({ cart}:any) => {
   return (
     <View className="bg-white rounded-xl">
       <View className="flex-row justify-between p-3 border-b border-gray-200">
