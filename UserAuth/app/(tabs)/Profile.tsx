@@ -1,22 +1,72 @@
 import { getAuthUser, logoutUser } from "@/redux/slices/authSlice";
 import { AppDispatch, RootState } from "@/redux/store";
 import { useRouter } from "expo-router";
-import React, { useEffect } from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, ScrollView, TouchableOpacity, Pressable, Image, Alert } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import * as SecureStore from "expo-secure-store";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as ImagePicker from "expo-image-picker"; 
 
 const Profile = () => {
+
+  
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const { profileData } = useSelector((state: RootState) => state.auth);
   const insets = useSafeAreaInsets();
+  const [url,setUrl] = useState<string|null>(null)
   const handleLogout = async () => {
     await dispatch(logoutUser());
     router.replace("/(Auth)/SignIn");
   };
+
+  const openCamera = async () => {
+    const { granted } = await ImagePicker.requestCameraPermissionsAsync();
+    if (!granted) {
+      alert("Permission denied!");
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      quality: 1,
+    });
+    if (!result.canceled) setUrl(result.assets[0].uri);
+  };
+
+  const openGallery = async () => {
+    const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!granted) {
+      alert("Permission denied!");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      allowsEditing: true,
+      quality: 1,
+    });
+    if (!result.canceled) setUrl(result.assets[0].uri);
+  };
+
+const handlePickImage = () => {
+  Alert.alert("Update Profile Photo", "Choose an option", [
+    {
+      text: "Camera",
+      onPress: () => openCamera(),
+    },
+    {
+      text: "Gallery",
+      onPress: () => openGallery(),
+    },
+    {
+      text: "Cancel",
+      style: "cancel",
+    },
+  ]);
+};
+  
 
   useEffect(() => {
     const loadProfile = async () => {  
@@ -51,11 +101,23 @@ const Profile = () => {
       <View className="px-4 pt-4">
         {/* Avatar + name */}
         <View className="bg-white rounded-2xl p-4 mb-3 border border-gray-100 items-center">
-          <View className="w-20 h-20 rounded-full bg-purple-100 items-center justify-center mb-3">
+          <Pressable
+            onPress={handlePickImage}
+            className="w-20 h-20 rounded-full bg-purple-100 items-center justify-center mb-3"
+          >
             <Text className="text-purple-800 text-2xl font-semibold">
-              {initials}
+              {url ? (
+                <Image
+                  source={{ uri: url }}
+                  className="w-20 h-20 rounded-full"
+                />
+              ) : (
+                <Text className="text-purple-800 text-2xl font-semibold">
+                  {initials}
+                </Text>
+              )}
             </Text>
-          </View>
+          </Pressable>
           <Text className=" font-semibold text-gray-900">
             {profileData.firstName} {profileData.lastName}
           </Text>

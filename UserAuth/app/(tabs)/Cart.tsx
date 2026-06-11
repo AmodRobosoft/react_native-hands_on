@@ -15,7 +15,6 @@ const Cart = () => {
 
   useEffect(() => { 
     const id = SecureStore.getItem("userId")
-    console.log("id",id)
     dispatch(userCart(id))
   }, [])
   
