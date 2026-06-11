@@ -8,6 +8,8 @@ import * as SecureStore from "expo-secure-store";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker"; 
+import * as Location from "expo-location";
+import MapView, { Marker } from "react-native-maps";
 
 const Profile = () => {
 
@@ -15,8 +17,14 @@ const Profile = () => {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const { profileData } = useSelector((state: RootState) => state.auth);
+  const [markerCoords, setMarkerCoords] = useState({
+    latitude: 13.0827,
+    longitude: 80.2707,
+  });
   const insets = useSafeAreaInsets();
-  const [url,setUrl] = useState<string|null>(null)
+  const [url, setUrl] = useState<string | null>(null)
+  const [locationPermission, setLocationPermission] = useState<boolean>(false);
+  const [currentLocation, setCurrentLocation] = useState<any|null>(null);
   const handleLogout = async () => {
     await dispatch(logoutUser());
     router.replace("/(Auth)/SignIn");
@@ -66,12 +74,49 @@ const handlePickImage = () => {
     },
   ]);
 };
+
   
+const getLocation = async () => {
+  const location = await Location.getCurrentPositionAsync({
+    accuracy: Location.Accuracy.High,
+  });
+
+  setMarkerCoords({
+    latitude: location.coords.latitude,
+    longitude: location.coords.longitude,
+  });
+
+  const [geo] = await Location.reverseGeocodeAsync({
+    latitude: location.coords.latitude,
+    longitude: location.coords.longitude,
+  });
+
+  setCurrentLocation({
+    address: `${geo.streetNumber}, ${geo.street}`,
+    city: geo.city,
+    state: geo.region,
+    country: geo.country,
+    postalCode: geo.postalCode,
+  });
+};
+
 
   useEffect(() => {
-    const loadProfile = async () => {  
-        const accessToken = await SecureStore.getItemAsync("accessToken");
-        dispatch(getAuthUser(accessToken));
+    const init = async () => {
+      const { granted } = await Location.requestForegroundPermissionsAsync();
+      if (!granted) {
+        alert("Permission denied!");
+        return;
+      }
+      setLocationPermission(true);
+      await getLocation(); 
+    };
+
+    init();
+
+    const loadProfile = async () => {
+      const accessToken = await SecureStore.getItemAsync("accessToken");
+      dispatch(getAuthUser(accessToken));
     };
     loadProfile();
   }, []);
@@ -144,10 +189,73 @@ const handlePickImage = () => {
           />
         </View>
 
+        <View className="border p-2 w-fit flex-row rounded-full items-center justify-center gap-5 bg-black my-5">
+          <Feather name="map-pin" size={15} color="#fff" />
+          <Text className=" text-white">Current Location</Text>
+        </View>
+
+        <MapView
+          style={{ width: "100%", height: 300, borderRadius: 16 }}
+          region={{
+            latitude: markerCoords.latitude,
+            longitude: markerCoords.longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          }}
+        >
+          <Marker
+            coordinate={markerCoords}
+            draggable
+            onDragEnd={async (e) => {
+              const coords = e.nativeEvent.coordinate;
+              setMarkerCoords(coords);
+
+              const [geo] = await Location.reverseGeocodeAsync({
+                latitude: coords.latitude,
+                longitude: coords.longitude,
+              });
+
+              setCurrentLocation({
+                address: `${geo.streetNumber}, ${geo.street}`,
+                city: geo.city,
+                state: geo.region,
+                country: geo.country,
+                postalCode: geo.postalCode,
+              });
+            }}
+          />
+        </MapView>
+
+        {currentLocation !== null ? (
+          <View className="bg-white rounded-2xl px-4 mb-3 border border-gray-100 mt-5">
+            <InfoRow
+              icon="map-pin"
+              label="street"
+              value={currentLocation.address}
+            />
+            <InfoRow
+              icon="map"
+              label="city / state"
+              value={`${currentLocation.city}, ${currentLocation.state}`}
+            />
+            <InfoRow
+              icon="globe"
+              label="country · postal"
+              value={`${currentLocation.country} · ${currentLocation.postalCode}`}
+              last
+            />
+          </View>
+        ) : (
+          <Text className=" text-gray-900 font-medium ml-1 mb-2 uppercase tracking-wide">
+            Please Pick the Address
+          </Text>
+        )}
+
         {/* Address */}
         <Text className=" text-gray-400 font-medium ml-1 mb-2 uppercase tracking-wide">
           Address
         </Text>
+
         <View className="bg-white rounded-2xl px-4 mb-3 border border-gray-100">
           <InfoRow
             icon="map-pin"
